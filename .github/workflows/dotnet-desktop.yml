@@ -63,11 +63,28 @@ jobs:
       env:
         SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
 
-    # Step 4: Deploy Application with Environment Variables
-    - name: Deploy Application
-      env:
-        STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
-        STRIPE_PUBLISHABLE_KEY: ${{ secrets.STRIPE_PUBLISHABLE_KEY }}
-        SENDGRID_API_KEY: ${{ secrets.SENDGRID_API_KEY }}
+    - name: Deploy to IIS
       run: |
-        echo "Deploying application with environment variables..."
+        $sourcePath = "$(System.DefaultWorkingDirectory)\app-build"
+        $destinationPath = "C:\inetpub\wwwroot\YourIISSite"  # Update this path to your IIS site
+
+        # Stop IIS App Pool (optional)
+        Stop-WebAppPool -Name "YourAppPoolName"
+
+        # Copy files to IIS site directory
+        Copy-Item -Path $sourcePath\* -Destination $destinationPath -Recurse -Force
+
+        # Start IIS App Pool
+        Start-WebAppPool -Name "YourAppPoolName"
+
+      shell: pwsh
+      env:
+        IIS_USERNAME: ${{ secrets.IIS_USERNAME }}
+        IIS_PASSWORD: ${{ secrets.IIS_PASSWORD }}
+
+    # Step 3: Restart IIS Application Pool
+    - name: Restart IIS Application Pool
+      run: |
+        ssh -o StrictHostKeyChecking=no ${{ secrets.IIS_USERNAME }}@${{ secrets.IIS_HOST }} "powershell Restart-WebAppPool -Name 'YourAppPoolName'"
+      env:
+        SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
