@@ -40,50 +40,48 @@ jobs:
     runs-on: windows-latest
 
     steps:
-    # Step 1: Download the built artifacts
-    - name: Download Build Artifacts
+    # Step 1: Download the artifact from GitHub Actions
+    - name: Download Artifact
       uses: actions/download-artifact@v3
       with:
-        name: app-build
+        name: app-build  # Artifact name must match the one used in the build job
+        path: ./artifact-dir  # Destination folder to store the downloaded artifact
 
-    # Step 2: Deploy files to IIS Server via FTP
-    - name: Deploy to IIS
-      uses: garygrossgarten/github-action-ftp@v3
+    # Step 2: Deploy to IIS Server via FTP using an alternative FTP action
+    - name: Deploy to IIS via FTP
+      uses: appleboy/ftp-action@v1.0.0  # Alternative FTP action
       with:
         host: ${{ secrets.IIS_HOST }}
         username: ${{ secrets.IIS_USERNAME }}
         password: ${{ secrets.IIS_PASSWORD }}
-        local-dir: ./output
-        remote-dir: /path/to/your/iis/site # Replace with your IIS site directory
+        local-dir: ./artifact-dir  # Path to the downloaded artifact directory
+        remote-dir: /path/to/your/iis/site  # Replace with your IIS site directory
 
-    # Step 3: Restart IIS Application Pool
+    # Step 3: Restart IIS Application Pool (optional)
     - name: Restart IIS Application Pool
       run: |
         ssh -o StrictHostKeyChecking=no ${{ secrets.IIS_USERNAME }}@${{ secrets.IIS_HOST }} "powershell Restart-WebAppPool -Name 'YourAppPoolName'"
       env:
         SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
 
-    - name: Deploy to IIS
+    # Step 4: Deploy via PowerShell to IIS (alternative to FTP)
+    - name: Deploy via PowerShell to IIS (alternative to FTP)
       run: |
-        $sourcePath = "$(System.DefaultWorkingDirectory)\app-build"
+        $sourcePath = "$(System.DefaultWorkingDirectory)\artifact-dir"  # Path to downloaded artifact
         $destinationPath = "C:\inetpub\wwwroot\YourIISSite"  # Update this path to your IIS site
-
         # Stop IIS App Pool (optional)
         Stop-WebAppPool -Name "YourAppPoolName"
-
         # Copy files to IIS site directory
         Copy-Item -Path $sourcePath\* -Destination $destinationPath -Recurse -Force
-
         # Start IIS App Pool
         Start-WebAppPool -Name "YourAppPoolName"
-
       shell: pwsh
       env:
         IIS_USERNAME: ${{ secrets.IIS_USERNAME }}
         IIS_PASSWORD: ${{ secrets.IIS_PASSWORD }}
 
-    # Step 3: Restart IIS Application Pool
-    - name: Restart IIS Application Pool
+    # Step 5: Restart IIS Application Pool again (optional)
+    - name: Restart IIS Application Pool Again (optional)
       run: |
         ssh -o StrictHostKeyChecking=no ${{ secrets.IIS_USERNAME }}@${{ secrets.IIS_HOST }} "powershell Restart-WebAppPool -Name 'YourAppPoolName'"
       env:
