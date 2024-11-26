@@ -47,11 +47,11 @@ jobs:
         name: app-build  # Artifact name must match the one used in the build job
         path: ./artifact-dir  # Destination folder to store the downloaded artifact
 
-    # Step 2: Deploy to IIS Server via FTP using an alternative FTP action
+    # Step 2: Deploy to IIS Server via FTP using SamKirkland/ftp-deploy-action
     - name: Deploy to IIS via FTP
-      uses: appleboy/ftp-action@v1.0.0  # Alternative FTP action
+      uses: SamKirkland/ftp-deploy-action@v4.0.0  # Alternative FTP action
       with:
-        host: ${{ secrets.IIS_HOST }}
+        server: ${{ secrets.IIS_HOST }}
         username: ${{ secrets.IIS_USERNAME }}
         password: ${{ secrets.IIS_PASSWORD }}
         local-dir: ./artifact-dir  # Path to the downloaded artifact directory
