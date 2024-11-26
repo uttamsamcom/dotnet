@@ -55,7 +55,7 @@ jobs:
         username: ${{ secrets.IIS_USERNAME }}
         password: ${{ secrets.IIS_PASSWORD }}
         local-dir: ./artifact-dir  # Path to the downloaded artifact directory
-        remote-dir: /path/to/your/iis/site  # Replace with your IIS site directory
+        remote-dir: C:\inetpub\wwwroot\demo-app  # Replace with your IIS site directory
 
     # Step 3: Restart IIS Application Pool (optional)
     - name: Restart IIS Application Pool
@@ -68,13 +68,13 @@ jobs:
     - name: Deploy via PowerShell to IIS (alternative to FTP)
       run: |
         $sourcePath = "$(System.DefaultWorkingDirectory)\artifact-dir"  # Path to downloaded artifact
-        $destinationPath = "C:\inetpub\wwwroot\YourIISSite"  # Update this path to your IIS site
+        $destinationPath = "C:\inetpub\wwwroot\demo-app"  # Update this path to your IIS site
         # Stop IIS App Pool (optional)
-        Stop-WebAppPool -Name "YourAppPoolName"
+        Stop-WebAppPool -Name "apt-booking"
         # Copy files to IIS site directory
         Copy-Item -Path $sourcePath\* -Destination $destinationPath -Recurse -Force
         # Start IIS App Pool
-        Start-WebAppPool -Name "YourAppPoolName"
+        Start-WebAppPool -Name "apt-booking"
       shell: pwsh
       env:
         IIS_USERNAME: ${{ secrets.IIS_USERNAME }}
