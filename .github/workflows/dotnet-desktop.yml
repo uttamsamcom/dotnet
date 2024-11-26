@@ -62,3 +62,12 @@ jobs:
         ssh -o StrictHostKeyChecking=no ${{ secrets.IIS_USERNAME }}@${{ secrets.IIS_HOST }} "powershell Restart-WebAppPool -Name 'YourAppPoolName'"
       env:
         SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+
+    # Step 4: Deploy Application with Environment Variables
+    - name: Deploy Application
+      env:
+        STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+        STRIPE_PUBLISHABLE_KEY: ${{ secrets.STRIPE_PUBLISHABLE_KEY }}
+        SENDGRID_API_KEY: ${{ secrets.SENDGRID_API_KEY }}
+      run: |
+        echo "Deploying application with environment variables..."
