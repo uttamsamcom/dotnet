@@ -1,38 +1,35 @@
-name: Build and Deploy to IIS
+name: Build and Deploy to IIS on Commit
 
 on:
-  push:
+  push:  # Trigger workflow on commits to any branch
     branches:
-      - main
-  pull_request:
-    branches:
-      - main
+      - '**'  # Or specify branches like 'main'
 
 jobs:
   build:
     runs-on: windows-latest
 
     steps:
-    # Checkout the repository
+    # Step 1: Checkout the code
     - name: Checkout Code
       uses: actions/checkout@v3
 
-    # Set up .NET SDK
+    # Step 2: Setup .NET SDK
     - name: Setup .NET
       uses: actions/setup-dotnet@v3
       with:
-        dotnet-version: 7.0 # Change this to your required .NET version
+        dotnet-version: 7.0 # Specify the required .NET version
 
-    # Restore dependencies
+    # Step 3: Restore dependencies
     - name: Restore Dependencies
       run: dotnet restore
 
-    # Build the project
+    # Step 4: Build and Publish the project
     - name: Build Project
       run: dotnet publish -c Release -o ./output
 
-    # Archive build artifacts
-    - name: Archive Build Artifacts
+    # Step 5: Upload build artifacts for later use
+    - name: Upload Build Artifacts
       uses: actions/upload-artifact@v3
       with:
         name: app-build
@@ -43,13 +40,13 @@ jobs:
     runs-on: windows-latest
 
     steps:
-    # Download build artifacts
+    # Step 1: Download the built artifacts
     - name: Download Build Artifacts
       uses: actions/download-artifact@v3
       with:
         name: app-build
 
-    # Deploy to IIS Server
+    # Step 2: Deploy files to IIS Server via FTP
     - name: Deploy to IIS
       uses: garygrossgarten/github-action-ftp@v3
       with:
@@ -57,7 +54,11 @@ jobs:
         username: ${{ secrets.IIS_USERNAME }}
         password: ${{ secrets.IIS_PASSWORD }}
         local-dir: ./output
-        remote-dir: /path/to/your/iis/site # Update this with your IIS site path
+        remote-dir: /path/to/your/iis/site # Replace with your IIS site directory
 
-    # Restart IIS Application Pool
-    - name
+    # Step 3: Restart IIS Application Pool
+    - name: Restart IIS Application Pool
+      run: |
+        ssh -o StrictHostKeyChecking=no ${{ secrets.IIS_USERNAME }}@${{ secrets.IIS_HOST }} "powershell Restart-WebAppPool -Name 'YourAppPoolName'"
+      env:
+        SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
